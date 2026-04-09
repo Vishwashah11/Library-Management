@@ -1,0 +1,12 @@
+node_modules/
+.env
+*.exe
+output.txt
+library_management.cpp
+library_management.exe
+database_setup.sql
+db.js
+main.py
+requirements.txt
+app/
+backend/
