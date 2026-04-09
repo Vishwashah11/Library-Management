@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stellar Library | Management System</title>
+<meta name="description" content="Library Management System — full-stack with REST API.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0b14;--surface:rgba(255,255,255,.04);--surface2:rgba(255,255,255,.07);
+  --border:rgba(255,255,255,.08);--borderb:rgba(255,255,255,.14);
+  --text:#f0f0f5;--muted:#6b7280;--dim:#9ca3af;
+  --indigo:#6366f1;--indigob:#818cf8;--indigog:rgba(99,102,241,.25);
+  --purple:#a855f7;--green:#10b981;--amber:#f59e0b;--red:#ef4444;
+  --r:14px;--rl:22px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.orbs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(100px);animation:drift 14s ease-in-out infinite}
+.o1{width:600px;height:600px;background:rgba(99,102,241,.14);top:-20%;left:-10%}
+.o2{width:500px;height:500px;background:rgba(168,85,247,.11);bottom:-15%;right:-5%;animation-delay:-5s}
+.o3{width:280px;height:280px;background:rgba(16,185,129,.07);top:40%;left:50%;animation-delay:-9s}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(28px,-28px) scale(1.04)}66%{transform:translate(-18px,18px) scale(.96)}}
+#app{position:relative;z-index:1}
+.hidden{display:none!important}
+
+/* ── AUTH ── */
+#auth{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.auth-card{width:100%;max-width:400px;background:rgba(255,255,255,.06);border:1px solid var(--borderb);border-radius:var(--rl);padding:44px 36px;backdrop-filter:blur(24px)}
+.auth-logo{width:60px;height:60px;background:linear-gradient(135deg,var(--indigo),var(--purple));border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 18px;box-shadow:0 8px 28px var(--indigog)}
+.auth-title{font-size:28px;font-weight:800;text-align:center;margin-bottom:4px;background:linear-gradient(135deg,#fff,#a5b4fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.auth-sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:32px}
+.rtabs{display:flex;background:rgba(0,0,0,.3);border-radius:10px;padding:3px;margin-bottom:24px;gap:3px}
+.rtab{flex:1;padding:9px;border:none;background:transparent;color:var(--muted);border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit}
+.rtab.active{background:var(--indigo);color:#fff;box-shadow:0 3px 10px var(--indigog)}
+
+/* ── INPUTS ── */
+label{display:block;font-size:12px;font-weight:500;color:var(--dim);margin-bottom:6px}
+input,select,textarea{width:100%;background:rgba(0,0,0,.4);border:1px solid var(--borderb);border-radius:10px;padding:12px 14px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s,box-shadow .2s;margin-bottom:14px}
+input:focus,select:focus{border-color:var(--indigo);box-shadow:0 0 0 3px var(--indigog)}
+select option{background:#1a1b2e;color:var(--text)}
+textarea{resize:vertical;min-height:72px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 20px;border-radius:10px;border:none;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:linear-gradient(135deg,var(--indigo),var(--purple));color:#fff;width:100%;box-shadow:0 5px 20px var(--indigog)}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+.btn-sm{padding:6px 13px;font-size:11px;border-radius:8px}
+.btn-indigo{background:var(--indigo);color:#fff}.btn-indigo:hover{background:var(--indigob)}
+.btn-purple{background:var(--purple);color:#fff}.btn-purple:hover{opacity:.85}
+.btn-green{background:var(--green);color:#fff}
+.btn-amber{background:var(--amber);color:#111}
+.btn-red{background:var(--red);color:#fff}
+.btn-ghost{background:var(--surface2);border:1px solid var(--borderb);color:var(--dim)}.btn-ghost:hover{color:var(--text);background:var(--surface)}
+
+/* ── APP LAYOUT ── */
+#main{display:none;min-height:100vh}
+.layout{display:flex;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{width:248px;min-width:248px;background:rgba(5,6,15,.8);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 12px;backdrop-filter:blur(20px)}
+.brand{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:28px}
+.brand-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--indigo),var(--purple));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.brand-name{font-size:14px;font-weight:700}.brand-sub{font-size:10px;color:var(--muted)}
+.nav-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);padding:0 12px;margin:14px 0 5px}
+.nav-btn{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-size:12px;font-weight:500;font-family:inherit;cursor:pointer;transition:all .15s;width:100%;text-align:left;margin-bottom:1px}
+.nav-btn:hover{background:var(--surface2);color:var(--text)}
+.nav-btn.active{background:var(--indigog);color:var(--indigob);border:1px solid rgba(99,102,241,.22)}
+.nav-icon{font-size:14px;width:18px;text-align:center}
+.sb-footer{margin-top:auto;padding-top:14px;border-top:1px solid var(--border)}
+.user-badge{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;background:var(--surface);margin-bottom:8px}
+.avatar{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.u-name{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.u-role{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow-y:auto;padding:28px}
+.page{display:none;animation:pIn .18s ease}
+.page.active{display:block}
+@keyframes pIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.page-hdr{margin-bottom:22px}
+.page-title{font-size:24px;font-weight:800;margin-bottom:3px}
+.page-sub{font-size:13px;color:var(--muted)}
+
+/* ── STATS ── */
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:12px;margin-bottom:22px}
+.stat{padding:18px 20px;border-radius:var(--r);background:var(--surface);border:1px solid var(--border)}
+.stat-val{font-size:28px;font-weight:800}
+.stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.9px;margin-top:3px}
+
+/* ── TABLE ── */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:18px}
+.tbl-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.tbl-title{font-size:14px;font-weight:700}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 16px;background:rgba(255,255,255,.02);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);text-align:left}
+td{padding:12px 16px;border-top:1px solid var(--border);font-size:12px;vertical-align:middle}
+tr:hover td{background:rgba(255,255,255,.02)}
+.td-name{font-weight:600;font-size:13px}
+.td-muted{color:var(--dim)}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.b-green{background:rgba(16,185,129,.14);color:var(--green)}
+.b-red{background:rgba(239,68,68,.14);color:var(--red)}
+.b-amber{background:rgba(245,158,11,.14);color:var(--amber)}
+.b-indigo{background:rgba(99,102,241,.14);color:var(--indigob)}
+.b-purple{background:rgba(168,85,247,.14);color:var(--purple)}
+.b-gray{background:rgba(255,255,255,.08);color:var(--dim)}
+
+/* ── CARD / SECTION ── */
+.card{padding:20px;background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);margin-bottom:16px}
+.card-title{font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.form-full{grid-column:1/-1}
+.flex-end{display:flex;justify-content:flex-end;align-items:flex-end}
+
+/* ── BOOK DETAIL CARD ── */
+.book-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.detail-row{display:flex;flex-direction:column;gap:2px}
+.detail-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.detail-val{font-size:13px;font-weight:500}
+
+/* ── SEARCH ── */
+.search-wrap{position:relative}
+.search-wrap input{padding-left:36px;margin-bottom:0}
+.search-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.35;pointer-events:none;font-size:14px}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#0e0f1e;border:1px solid var(--borderb);border-radius:var(--rl);padding:28px;width:100%;max-width:430px;animation:pIn .18s ease}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:4px}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:20px}
+.modal-actions{display:flex;gap:8px;margin-top:6px}
+.modal-actions .btn{flex:1}
+
+/* ── TOAST ── */
+#toasts{position:fixed;top:18px;right:18px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 16px;border-radius:10px;font-size:12px;font-weight:500;max-width:300px;animation:slideIn .25s ease;border:1px solid var(--borderb)}
+@keyframes slideIn{from{transform:translateX(36px);opacity:0}to{transform:translateX(0);opacity:1}}
+.t-success{background:rgba(16,185,129,.14);color:#6ee7b7;border-color:rgba(16,185,129,.28)}
+.t-error{background:rgba(239,68,68,.14);color:#fca5a5;border-color:rgba(239,68,68,.28)}
+.t-info{background:rgba(99,102,241,.14);color:#c7d2fe;border-color:rgba(99,102,241,.28)}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:2px;background:rgba(0,0,0,.25);border-radius:10px;padding:3px;margin-bottom:18px}
+.tab{flex:1;padding:8px;border:none;background:transparent;color:var(--muted);border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.tab.active{background:var(--surface2);color:var(--text);border:1px solid var(--borderb)}
+
+/* ── LOADING ── */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.15);border-top-color:var(--indigob);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row td{text-align:center;padding:32px;color:var(--muted)}
+.empty{padding:36px;text-align:center;color:var(--muted);font-size:13px}
+.empty-ico{font-size:32px;margin-bottom:8px;opacity:.35}
+
+@media(max-width:768px){.sidebar{display:none}.content{padding:16px}.form-row{grid-template-columns:1fr}.book-detail-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="orbs"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+<div id="toasts"></div>
+
+<!-- ═════════════ AUTH ═════════════ -->
+<div id="auth">
+  <div class="auth-card">
+    <div class="auth-logo">📚</div>
+    <h1 class="auth-title">Stellar Library</h1>
+    <p class="auth-sub">Library Management System</p>
+    <div class="rtabs">
+      <button class="rtab active" id="rt-student"   onclick="setRole('student')">🎓 Student</button>
+      <button class="rtab"        id="rt-librarian" onclick="setRole('librarian')">📖 Librarian</button>
+      <button class="rtab"        id="rt-admin"     onclick="setRole('admin')">🛡️ Admin</button>
+    </div>
+    <label>Email</label>
+    <input type="email" id="inp-email" placeholder="you@example.com">
+    <label>Name</label>
+    <input type="text" id="inp-name" placeholder="Your full name">
+    <button class="btn btn-primary" id="login-btn" onclick="doLogin()">🚀 Enter Dashboard</button>
+    <p style="text-align:center;font-size:11px;color:var(--muted);margin-top:12px">Any email · Select role above</p>
+  </div>
+</div>
+
+<!-- ═════════════ MAIN APP ═════════════ -->
+<div id="main">
+ <div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">📚</div>
+      <div><div class="brand-name">Stellar Library</div><div class="brand-sub">Management System</div></div>
+    </div>
+
+    <!-- Student -->
+    <div id="snav" class="hidden">
+      <div class="nav-label">Student</div>
+      <button id="nb-s-browse"   class="nav-btn" onclick="go('s-browse')"><span class="nav-icon">🔍</span>Browse Books</button>
+      <button id="nb-s-myres"    class="nav-btn" onclick="go('s-myres')"><span class="nav-icon">🗓️</span>My Reservations</button>
+      <button id="nb-s-myissues" class="nav-btn" onclick="go('s-myissues')"><span class="nav-icon">📋</span>My Issues</button>
+      <button id="nb-s-myext"    class="nav-btn" onclick="go('s-myext')"><span class="nav-icon">⏱️</span>My Extensions</button>
+    </div>
+
+    <!-- Librarian -->
+    <div id="lnav" class="hidden">
+      <div class="nav-label">Librarian</div>
+      <button id="nb-l-catalog"  class="nav-btn" onclick="go('l-catalog')"><span class="nav-icon">📚</span>Book Catalog</button>
+      <button id="nb-l-reserves" class="nav-btn" onclick="go('l-reserves')"><span class="nav-icon">✅</span>Reservations</button>
+      <button id="nb-l-issues"   class="nav-btn" onclick="go('l-issues')"><span class="nav-icon">📤</span>Issue &amp; Return</button>
+      <button id="nb-l-ext"      class="nav-btn" onclick="go('l-ext')"><span class="nav-icon">🔄</span>Extensions</button>
+      <button id="nb-l-overdue"  class="nav-btn" onclick="go('l-overdue')"><span class="nav-icon">⚠️</span>Overdue Books</button>
+    </div>
+
+    <!-- Admin -->
+    <div id="anav" class="hidden">
+      <div class="nav-label">Admin</div>
+      <button id="nb-a-dash"     class="nav-btn" onclick="go('a-dash')"><span class="nav-icon">📊</span>Dashboard</button>
+      <button id="nb-a-books"    class="nav-btn" onclick="go('a-books')"><span class="nav-icon">📖</span>Manage Books</button>
+      <button id="nb-a-users"    class="nav-btn" onclick="go('a-users')"><span class="nav-icon">👥</span>Manage Users</button>
+      <button id="nb-a-tx"       class="nav-btn" onclick="go('a-tx')"><span class="nav-icon">🔄</span>Transactions</button>
+      <button id="nb-a-overdue"  class="nav-btn" onclick="go('a-overdue')"><span class="nav-icon">⚠️</span>Overdue</button>
+      <button id="nb-a-popular"  class="nav-btn" onclick="go('a-popular')"><span class="nav-icon">🏆</span>Popular Books</button>
+      <button id="nb-a-settings" class="nav-btn" onclick="go('a-settings')"><span class="nav-icon">⚙️</span>Settings</button>
+    </div>
+
+    <div class="sb-footer">
+      <div class="user-badge">
+        <div class="avatar" id="sb-av">U</div>
+        <div><div class="u-name" id="sb-name">User</div><div class="u-role" id="sb-role">—</div></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="width:100%" onclick="logout()">🚪 Logout</button>
+    </div>
+  </nav>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ══ STUDENT: Browse ══ -->
+    <div id="page-s-browse" class="page">
+      <div class="page-hdr"><div class="page-title">📚 Browse Books</div><div class="page-sub">Search and reserve from the catalog</div></div>
+      <div class="card" style="margin-bottom:14px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div class="search-wrap" style="flex:1;min-width:180px"><span class="search-ico">🔍</span><input type="text" id="s-search" placeholder="Search title, author, ISBN…" oninput="loadBrowse()"></div>
+          <select id="s-cat-filter" style="width:160px;margin-bottom:0" onchange="loadBrowse()"><option value="">All Categories</option></select>
+          <label style="display:flex;align-items:center;gap:6px;margin-bottom:0;color:var(--dim);font-size:12px"><input type="checkbox" id="s-avail-only" onchange="loadBrowse()" style="width:auto;margin-bottom:0"> Available only</label>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-head"><span class="tbl-title">Book Catalog</span><span id="browse-count" style="font-size:11px;color:var(--muted)"></span></div>
+        <table><thead><tr><th>Title &amp; Author</th><th>Category</th><th>ISBN</th><th>Availability</th><th>Action</th></tr></thead>
+        <tbody id="tb-browse"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ STUDENT: Book Detail modal is inline below ══ -->
+
+    <!-- ══ STUDENT: My Reservations ══ -->
+    <div id="page-s-myres" class="page">
+      <div class="page-hdr"><div class="page-title">🗓️ My Reservations</div><div class="page-sub">Track your reservation status</div></div>
+      <div class="tbl-wrap">
+        <div class="tbl-head"><span class="tbl-title">All Reservations</span><button class="btn btn-sm btn-ghost" onclick="loadMyRes()">↺ Refresh</button></div>
+        <table><thead><tr><th>Res #</th><th>Book</th><th>Reserved On</th><th>Status</th></tr></thead>
+        <tbody id="tb-myres"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ STUDENT: My Issues ══ -->
+    <div id="page-s-myissues" class="page">
+      <div class="page-hdr"><div class="page-title">📋 My Issued Books</div><div class="page-sub">Books currently issued to you</div></div>
+      <div class="tbl-wrap">
+        <div class="tbl-head"><span class="tbl-title">Active Issues</span><button class="btn btn-sm btn-ghost" onclick="loadMyIssues()">↺ Refresh</button></div>
+        <table><thead><tr><th>Issue #</th><th>Book</th><th>Issued</th><th>Due Date</th><th>Fine (₹)</th><th>Action</th></tr></thead>
+        <tbody id="tb-myissues"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ STUDENT: My Extensions ══ -->
+    <div id="page-s-myext" class="page">
+      <div class="page-hdr"><div class="page-title">⏱️ My Extensions</div><div class="page-sub">Extension requests you have submitted</div></div>
+      <div class="tbl-wrap">
+        <div class="tbl-head"><span class="tbl-title">Extension History</span><button class="btn btn-sm btn-ghost" onclick="loadMyExt()">↺ Refresh</button></div>
+        <table><thead><tr><th>Ext #</th><th>Issue #</th><th>Book</th><th>Extra Days</th><th>Reason</th><th>Status</th></tr></thead>
+        <tbody id="tb-myext"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ LIBRARIAN: Book Catalog ══ -->
+    <div id="page-l-catalog" class="page">
+      <div class="page-hdr"><div class="page-title">📚 Book Catalog</div><div class="page-sub">Manage availability and view full book details</div></div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="search-wrap"><span class="search-ico">🔍</span><input type="text" id="l-search" placeholder="Search books…" oninput="loadLCatalog()"></div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-head"><span class="tbl-title">All Books</span><button class="btn btn-sm btn-indigo" onclick="go('a-books')">+ Add Book</button></div>
+        <table><thead><tr><th>Title</th><th>Author</th><th>Category</th><th>Copies</th><th>Available</th><th>Edition/Year</th><th>Location</th><th>Action</th></tr></thead>
+        <tbody id="tb-lcatalog"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ LIBRARIAN: Reservations ══ -->
+    <div id="page-l-reserves" class="page">
+      <div class="page-hdr"><div class="page-title">✅ Reservations</div><div class="page-sub">Approve or reject student reservation requests</div></div>
+      <div class="tabs">
+        <button class="tab active" onclick="loadLRes('pending',this)">🕐 Pending</button>
+        <button class="tab" onclick="loadLRes('approved',this)">✅ Approved</button>
+        <button class="tab" onclick="loadLRes('rejected',this)">❌ Rejected</button>
+        <button class="tab" onclick="loadLRes('',this)">📋 All</button>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-head"><span class="tbl-title">Reservations</span><button class="btn btn-sm btn-ghost" onclick="loadLRes(currentResStatus)">↺ Refresh</button></div>
+        <table><thead><tr><th>Res #</th><th>Student</th><th>Book</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="tb-lreserves"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ LIBRARIAN: Issue & Return ══ -->
+    <div id="page-l-issues" class="page">
+      <div class="page-hdr"><div class="page-title">📤 Issue &amp; Return</div><div class="page-sub">Process book borrowing and returns, calculate fines</div></div>
+      <div class="card">
+        <div class="card-title">📤 Issue a Book</div>
+        <div class="form-row">
+          <div><label>Student</label><select id="sel-stu" style="margin-bottom:0"></select></div>
+          <div><label>Book (Available)</label><select id="sel-book" style="margin-bottom:0"></select></div>
+          <div style="margin-top:14px"><label>Loan Duration (days)</label><input type="number" id="inp-days" value="14" min="1" max="90" style="margin-bottom:0"></div>
+          <div class="flex-end" style="margin-top:14px"><button class="btn btn-indigo" style="width:100%" onclick="libIssueBook()">📤 Issue Book</button></div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-head"><span class="tbl-title">Active Issues</span><button class="btn btn-sm btn-ghost" onclick="loadLIssues()">↺ Refresh</button></div>
+        <table><thead><tr><th>Issue #</th><th>Student</th><th>Book</th><th>Issued</th><th>Due Date</th><th>Fine (₹)</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="tb-lissues"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ LIBRARIAN: Extensions ══ -->
+    <div id="page-l-ext" class="page">
+      <div class="page-hdr"><div class="page-title">🔄 Extension Requests</div><div class="page-sub">Approve or reject student extension requests</div></div>
+      <div class="tbl-wrap">
+        <div class="tbl-head"><span class="tbl-title">All Extensions</span><button class="btn btn-sm btn-ghost" onclick="loadLExt()">↺ Refresh</button></div>
+        <table><thead><tr><th>Ext #</th><th>Issue #</th><th>Student</th><th>Book</th><th>Extra Days</th><th>Reason</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="tb-lext"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ LIBRARIAN/ADMIN: Overdue ══ -->
+    <div id="page-l-overdue" class="page">
+      <div class="page-hdr"><div class="page-title">⚠️ Overdue Books</div><div class="page-sub">Books past their due date</div></div>
+      <div class="tbl-wrap">
+        <div class="tbl-head"><span class="tbl-title">Overdue Issues</span><button class="btn btn-sm btn-ghost" onclick="loadOverdue('l-overdue')">↺ Refresh</button></div>
+        <table><thead><tr><th>Issue #</th><th>Student</th><th>Email</th><th>Book</th><th>Due</th><th>Days Overdue</th><th>Fine (₹)</th></tr></thead>
+        <tbody id="tb-loverdue"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ ADMIN: Dashboard ══ -->
+    <div id="page-a-dash" class="page">
+      <div class="page-hdr"><div class="page-title">📊 Admin Dashboard</div><div class="page-sub">Live system overview</div></div>
+      <div class="stats" id="admin-stats"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="card">
+          <div class="card-title">💡 Grant Permission</div>
+          <label>User</label><select id="perm-user"></select>
+          <label>Permission</label>
+          <select id="perm-type">
+            <option value="issue_books">Issue Books</option>
+            <option value="approve_reservations">Approve Reservations</option>
+            <option value="manage_catalog">Manage Catalog</option>
+            <option value="view_reports">View Reports</option>
+          </select>
+          <button class="btn btn-amber" style="width:100%;margin-bottom:0" onclick="grantPerm()">Grant Permission</button>
+        </div>
+        <div class="card">
+          <div class="card-title">🔍 Check Transaction</div>
+          <label>Issue ID</label>
+          <input type="number" id="check-tx-id" placeholder="Enter Issue #">
+          <button class="btn btn-indigo" style="width:100%;margin-bottom:0" onclick="checkTx()">Look Up</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ADMIN: Manage Books ══ -->
+    <div id="page-a-books" class="page">
+      <div class="page-hdr"><div class="page-title">📖 Manage Books</div><div class="page-sub">Add, edit or remove books from the catalog</div></div>
+      <div class="card">
+        <div class="card-title">➕ Add New Book</div>
+        <div class="form-row">
+          <div><label>Title *</label><input type="text" id="bk-title" placeholder="Book title"></div>
+          <div><label>Author *</label><input type="text" id="bk-author" placeholder="Author name"></div>
+          <div><label>ISBN</label><input type="text" id="bk-isbn" placeholder="978-x-xx-xxxxxx-x"></div>
+          <div><label>Publisher</label><input type="text" id="bk-pub" placeholder="Publisher name"></div>
+          <div><label>Category</label><input type="text" id="bk-cat" placeholder="e.g. Programming"></div>
+          <div><label>Year</label><input type="number" id="bk-year" placeholder="2024"></div>
+          <div><label>Copies *</label><input type="number" id="bk-copies" value="1" min="1"></div>
+          <div><label>Edition</label><input type="text" id="bk-ed" placeholder="1st"></div>
+          <div><label>Shelf Location</label><input type="text" id="bk-loc" placeholder="A-01"></div>
+          <div class="form-full"><label>Description</label><textarea id="bk-desc" placeholder="Brief description…"></textarea></div>
+          <div class="form-full flex-end"><button class="btn btn-green" onclick="addBook()">Add Book to Catalog</button></div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-head"><span class="tbl-title">All Books</span><button class="btn btn-sm btn-ghost" onclick="loadAdminBooks()">↺ Refresh</button></div>
+        <table><thead><tr><th>#</th><th>Title</th><th>Author</th><th>Category</th><th>Copies</th><th>Avail.</th><th>Location</th><th>Action</th></tr></thead>
+        <tbody id="tb-abooks"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ ADMIN: Manage Users ══ -->
+    <div id="page-a-users" class="page">
+      <div class="page-hdr"><div class="page-title">👥 Manage Users</div><div class="page-sub">View and update registered users</div></div>
+      <div class="tabs">
+        <button class="tab active" onclick="loadUsers('',this)">All</button>
+        <button class="tab" onclick="loadUsers('student',this)">🎓 Students</button>
+        <button class="tab" onclick="loadUsers('librarian',this)">📖 Librarians</button>
+        <button class="tab" onclick="loadUsers('admin',this)">🛡️ Admins</button>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-head"><span class="tbl-title">Users</span><button class="btn btn-sm btn-ghost" onclick="loadUsers(currentUserRole)">↺ Refresh</button></div>
+        <table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Dept / ID</th><th>Status</th><th>Joined</th><th>Action</th></tr></thead>
+        <tbody id="tb-ausers"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ ADMIN: Transactions ══ -->
+    <div id="page-a-tx" class="page">
+      <div class="page-hdr"><div class="page-title">🔄 All Transactions</div><div class="page-sub">Complete audit trail of all issue transactions</div></div>
+      <div class="tabs">
+        <button class="tab active" onclick="loadATx('',this)">All</button>
+        <button class="tab" onclick="loadATx('active',this)">📤 Active</button>
+        <button class="tab" onclick="loadATx('returned',this)">✅ Returned</button>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-head"><span class="tbl-title">Transactions</span><button class="btn btn-sm btn-ghost" onclick="loadATx(currentTxStatus)">↺ Refresh</button></div>
+        <table><thead><tr><th>Issue #</th><th>Student</th><th>Book</th><th>Issued</th><th>Due</th><th>Returned</th><th>Fine (₹)</th><th>Status</th></tr></thead>
+        <tbody id="tb-atx"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ ADMIN: Overdue ══ -->
+    <div id="page-a-overdue" class="page">
+      <div class="page-hdr"><div class="page-title">⚠️ Overdue Books</div><div class="page-sub">Books past their due date — pending fines</div></div>
+      <div class="tbl-wrap">
+        <div class="tbl-head"><span class="tbl-title">Overdue Issues</span><button class="btn btn-sm btn-ghost" onclick="loadOverdue('a-overdue')">↺ Refresh</button></div>
+        <table><thead><tr><th>Issue #</th><th>Student</th><th>Email</th><th>Book</th><th>Due</th><th>Days Overdue</th><th>Fine (₹)</th></tr></thead>
+        <tbody id="tb-aoverdue"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ ADMIN: Popular Books ══ -->
+    <div id="page-a-popular" class="page">
+      <div class="page-hdr"><div class="page-title">🏆 Popular Books</div><div class="page-sub">Most borrowed books in the library</div></div>
+      <div class="tbl-wrap">
+        <div class="tbl-head"><span class="tbl-title">Top Borrowed</span><button class="btn btn-sm btn-ghost" onclick="loadPopular()">↺ Refresh</button></div>
+        <table><thead><tr><th>Rank</th><th>Title</th><th>Author</th><th>Category</th><th>Borrow Count</th><th>Available</th></tr></thead>
+        <tbody id="tb-popular"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ ADMIN: Settings ══ -->
+    <div id="page-a-settings" class="page">
+      <div class="page-hdr"><div class="page-title">⚙️ Settings</div><div class="page-sub">System configuration</div></div>
+      <div class="card" style="max-width:400px">
+        <div class="card-title">💰 Fine Configuration</div>
+        <label>Fine per Overdue Day (₹)</label>
+        <input type="number" id="fine-rate" value="5" min="0">
+        <button class="btn btn-indigo" onclick="saveSettings()">Save Settings</button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+ </div><!-- /layout -->
+</div><!-- /main -->
+
+<!-- MODAL -->
+<div id="modal-overlay" class="modal-overlay hidden" onclick="ovClick(event)">
+  <div class="modal">
+    <div class="modal-title" id="m-title"></div>
+    <div class="modal-sub"   id="m-sub"></div>
+    <div id="m-body"></div>
+    <div class="modal-actions" id="m-actions"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════
+let CU = null; // current user object
+let currentResStatus = 'pending';
+let currentUserRole  = '';
+let currentTxStatus  = '';
+
+// ══════════════════════════════════════════════════
+//  API HELPER
+// ══════════════════════════════════════════════════
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (CU) {
+    opts.headers['x-user-id']   = CU.user_id;
+    opts.headers['x-user-role'] = CU.role;
+  }
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch('/api' + path, opts);
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || 'Server error');
+  return data;
+}
+
+// ══════════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════════
+let selRole = 'student';
+function setRole(r) {
+  selRole = r;
+  document.querySelectorAll('.rtab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`rt-${r}`).classList.add('active');
+}
+
+async function doLogin() {
+  const email = document.getElementById('inp-email').value.trim();
+  const name  = document.getElementById('inp-name').value.trim();
+  if (!email) { toast('Please enter your email.', 'error'); return; }
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Logging in…';
+  try {
+    const { user } = await api('POST', '/auth/login', { email, name, role: selRole });
+    CU = user;
+    document.getElementById('auth').style.display = 'none';
+    document.getElementById('main').style.display = 'block';
+    const colors = { admin:'linear-gradient(135deg,#f59e0b,#ef4444)', librarian:'linear-gradient(135deg,#a855f7,#6366f1)', student:'linear-gradient(135deg,#6366f1,#06b6d4)' };
+    document.getElementById('sb-name').textContent = user.name;
+    document.getElementById('sb-role').textContent = user.role.toUpperCase();
+    document.getElementById('sb-av').textContent   = user.name[0].toUpperCase();
+    document.getElementById('sb-av').style.background = colors[user.role] || colors.student;
+    ['snav','lnav','anav'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    const navMap = { student:'snav', librarian:'lnav', admin:'anav' };
+    document.getElementById(navMap[user.role]).classList.remove('hidden');
+    const defaults = { student:'s-browse', librarian:'l-catalog', admin:'a-dash' };
+    go(defaults[user.role]);
+    toast(`Welcome, ${user.name}!`, 'success');
+  } catch(e) { toast(e.message, 'error'); }
+  finally { btn.disabled = false; btn.innerHTML = '🚀 Enter Dashboard'; }
+}
+
+function logout() {
+  CU = null;
+  document.getElementById('main').style.display = 'none';
+  document.getElementById('auth').style.display = 'flex';
+  ['inp-email','inp-name'].forEach(id => document.getElementById(id).value = '');
+}
+
+// ══════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════
+function go(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const pg = document.getElementById(`page-${pageId}`);
+  if (pg) pg.classList.add('active');
+  const btn = document.getElementById(`nb-${pageId}`);
+  if (btn) btn.classList.add('active');
+  // Load data for page
+  const loaders = {
+    's-browse':   loadBrowse,
+    's-myres':    loadMyRes,
+    's-myissues': loadMyIssues,
+    's-myext':    loadMyExt,
+    'l-catalog':  loadLCatalog,
+    'l-reserves': () => loadLRes('pending'),
+    'l-issues':   loadLIssues,
+    'l-ext':      loadLExt,
+    'l-overdue':  () => loadOverdue('l-overdue'),
+    'a-dash':     loadADash,
+    'a-books':    loadAdminBooks,
+    'a-users':    () => loadUsers(''),
+    'a-tx':       () => loadATx(''),
+    'a-overdue':  () => loadOverdue('a-overdue'),
+    'a-popular':  loadPopular,
+    'a-settings': loadSettings,
+  };
+  if (loaders[pageId]) loaders[pageId]();
+}
+
+// ══════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════
+const fmt = s => s || '—';
+const money = v => v > 0 ? `<span style="color:var(--red)">₹${(+v).toFixed(2)}</span>` : '—';
+function badge(status) {
+  const m = {
+    pending:'b-amber', approved:'b-green', rejected:'b-red',
+    active:'b-indigo', returned:'b-green', overdue:'b-red',
+    suspended:'b-red', available:'b-green'
+  };
+  return `<span class="badge ${m[status]||'b-gray'}">${status}</span>`;
+}
+function emptyRow(cols, msg='No records found.') {
+  return `<tr><td colspan="${cols}"><div class="empty"><div class="empty-ico">📂</div>${msg}</div></td></tr>`;
+}
+function loadingRow(cols) {
+  return `<tr class="loading-row"><td colspan="${cols}"><span class="spinner"></span> Loading…</td></tr>`;
+}
+
+// ══════════════════════════════════════════════════
+//  STUDENT: Browse Books
+// ══════════════════════════════════════════════════
+async function loadBrowse() {
+  const tbody = document.getElementById('tb-browse');
+  tbody.innerHTML = loadingRow(5);
+  try {
+    const q  = document.getElementById('s-search').value;
+    const cat = document.getElementById('s-cat-filter').value;
+    const av  = document.getElementById('s-avail-only').checked;
+    let qs = [];
+    if (q)   qs.push(`search=${encodeURIComponent(q)}`);
+    if (cat) qs.push(`category=${encodeURIComponent(cat)}`);
+    if (av)  qs.push('available=true');
+    const books = await api('GET', `/books${qs.length?'?'+qs.join('&'):''}`);
+    document.getElementById('browse-count').textContent = `${books.length} book${books.length!==1?'s':''}`;
+
+    // Load categories once
+    const catSel = document.getElementById('s-cat-filter');
+    if (catSel.options.length <= 1) {
+      const cats = await api('GET', '/books/categories/list');
+      cats.forEach(c => { const o = document.createElement('option'); o.value=c; o.textContent=c; catSel.appendChild(o); });
+    }
+
+    if (!books.length) { tbody.innerHTML = emptyRow(5, 'No books match your search.'); return; }
+    tbody.innerHTML = books.map(b => `
+      <tr>
+        <td><div class="td-name">${b.title}</div><div class="td-muted" style="font-size:11px">${b.author}</div></td>
+        <td><span class="badge b-indigo">${b.category}</span></td>
+        <td class="td-muted">${b.isbn}</td>
+        <td>${b.available_copies>0?`<span class="badge b-green">${b.available_copies}/${b.copies} left</span>`:`<span class="badge b-red">Out of Stock</span>`}</td>
+        <td style="display:flex;gap:6px">
+          <button class="btn btn-sm btn-ghost" onclick="showBookDetail(${b.book_id})">Details</button>
+          ${b.available_copies>0?`<button class="btn btn-sm btn-indigo" onclick="reserveBook(${b.book_id},'${escHtml(b.title)}')">Reserve</button>`:`<button class="btn btn-sm btn-ghost" disabled>Unavailable</button>`}
+        </td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = emptyRow(5, e.message); toast(e.message,'error'); }
+}
+
+async function showBookDetail(id) {
+  try {
+    const b = await api('GET', `/books/${id}`);
+    openModal(`📖 ${b.title}`, `by ${b.author}`, `
+      <div class="book-detail-grid">
+        <div class="detail-row"><div class="detail-label">ISBN</div><div class="detail-val">${b.isbn}</div></div>
+        <div class="detail-row"><div class="detail-label">Publisher</div><div class="detail-val">${b.publisher}</div></div>
+        <div class="detail-row"><div class="detail-label">Year</div><div class="detail-val">${b.year}</div></div>
+        <div class="detail-row"><div class="detail-label">Edition</div><div class="detail-val">${b.edition}</div></div>
+        <div class="detail-row"><div class="detail-label">Category</div><div class="detail-val"><span class="badge b-indigo">${b.category}</span></div></div>
+        <div class="detail-row"><div class="detail-label">Shelf Location</div><div class="detail-val">${b.location}</div></div>
+        <div class="detail-row"><div class="detail-label">Total Copies</div><div class="detail-val">${b.copies}</div></div>
+        <div class="detail-row"><div class="detail-label">Available</div><div class="detail-val">${b.available_copies>0?`<span class="badge b-green">${b.available_copies}</span>`:`<span class="badge b-red">0</span>`}</div></div>
+        ${b.active_issues!==undefined?`<div class="detail-row"><div class="detail-label">Active Issues</div><div class="detail-val">${b.active_issues}</div></div>`:''}
+        ${b.pending_reservations!==undefined?`<div class="detail-row"><div class="detail-label">Pending Reservations</div><div class="detail-val">${b.pending_reservations}</div></div>`:''}
+      </div>
+      ${b.description?`<p style="font-size:12px;color:var(--dim);line-height:1.6">${b.description}</p>`:''}
+    `, [{label:'Close',cls:'btn-ghost',fn:'hideModal()'}, ...(b.available_copies>0?[{label:'Reserve',cls:'btn-indigo',fn:`reserveBook(${b.book_id},'${escHtml(b.title)}');hideModal()`}]:[])])
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function reserveBook(book_id, title) {
+  try {
+    const data = await api('POST', '/reservations', { book_id, student_id: CU.user_id });
+    toast(data.message, 'success');
+    loadBrowse();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════════════════
+//  STUDENT: My Reservations
+// ══════════════════════════════════════════════════
+async function loadMyRes() {
+  const tbody = document.getElementById('tb-myres');
+  tbody.innerHTML = loadingRow(4);
+  try {
+    const list = await api('GET', '/reservations');
+    if (!list.length) { tbody.innerHTML = emptyRow(4,'No reservations yet.'); return; }
+    tbody.innerHTML = list.map(r => `
+      <tr>
+        <td>#${r.reservation_id}</td>
+        <td class="td-name">${r.book_title||'—'}</td>
+        <td class="td-muted">${r.reservation_date}</td>
+        <td>${badge(r.status)}</td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = emptyRow(4,e.message); }
+}
+
+// ══════════════════════════════════════════════════
+//  STUDENT: My Issues
+// ══════════════════════════════════════════════════
+async function loadMyIssues() {
+  const tbody = document.getElementById('tb-myissues');
+  tbody.innerHTML = loadingRow(6);
+  try {
+    const list = await api('GET', '/issues');
+    if (!list.length) { tbody.innerHTML = emptyRow(6,'No active issues.'); return; }
+    tbody.innerHTML = list.map(i => `
+      <tr>
+        <td>#${i.issue_id}</td>
+        <td class="td-name">${i.book_title||'—'}</td>
+        <td class="td-muted">${i.issue_date}</td>
+        <td>${i.is_overdue?`<span style="color:var(--red);font-weight:600">${i.due_date} ⚠️</span>`:i.due_date}</td>
+        <td>${money(i.fine_amount)}</td>
+        <td><button class="btn btn-sm btn-purple" onclick="openExtReq(${i.issue_id})">Request Ext.</button></td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = emptyRow(6,e.message); }
+}
+
+function openExtReq(issue_id) {
+  openModal('Request Extension', `Submit an extension request for Issue #${issue_id}`,
+    `<label>Extra Days</label><input type="number" id="ext-days" value="7" min="1" max="30">
+     <label>Reason (optional)</label><textarea id="ext-reason" placeholder="Why do you need more time?"></textarea>`,
+    [{label:'Cancel',cls:'btn-ghost',fn:'hideModal()'},{label:'Submit Request',cls:'btn-purple',fn:`submitExt(${issue_id})`}]);
+}
+
+async function submitExt(issue_id) {
+  const days   = +document.getElementById('ext-days').value;
+  const reason = document.getElementById('ext-reason').value;
+  if (!days||days<1) { toast('Enter valid extra days.','error'); return; }
+  try {
+    const data = await api('POST', '/extensions', { issue_id, extra_days: days, reason });
+    toast(data.message,'success'); hideModal(); loadMyIssues();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════════════════
+//  STUDENT: My Extensions
+// ══════════════════════════════════════════════════
+async function loadMyExt() {
+  const tbody = document.getElementById('tb-myext');
+  tbody.innerHTML = loadingRow(6);
+  try {
+    const list = await api('GET', '/extensions');
+    if (!list.length) { tbody.innerHTML = emptyRow(6,'No extension requests yet.'); return; }
+    tbody.innerHTML = list.map(e => `
+      <tr>
+        <td>#${e.extension_id}</td>
+        <td>#${e.issue_id}</td>
+        <td>${e.book_title||'—'}</td>
+        <td>+${e.moew_days} days</td>
+        <td class="td-muted">${e.reason||'—'}</td>
+        <td>${badge(e.status)}</td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = emptyRow(6,e.message); }
+}
+
+// ══════════════════════════════════════════════════
+//  LIBRARIAN: Book Catalog
+// ══════════════════════════════════════════════════
+async function loadLCatalog() {
+  const tbody = document.getElementById('tb-lcatalog');
+  tbody.innerHTML = loadingRow(8);
+  try {
+    const q = document.getElementById('l-search').value;
+    const books = await api('GET', `/books${q?'?search='+encodeURIComponent(q):''}`);
+    if (!books.length) { tbody.innerHTML = emptyRow(8,'No books found.'); return; }
+    tbody.innerHTML = books.map(b => `
+      <tr>
+        <td><div class="td-name">${b.title}</div></td>
+        <td class="td-muted">${b.author}</td>
+        <td><span class="badge b-indigo">${b.category}</span></td>
+        <td>${b.copies}</td>
+        <td>${b.available_copies>0?`<span class="badge b-green">${b.available_copies}</span>`:`<span class="badge b-red">0</span>`}</td>
+        <td class="td-muted">${b.edition} / ${b.year}</td>
+        <td class="td-muted">${b.location}</td>
+        <td style="display:flex;gap:4px">
+          <button class="btn btn-sm btn-ghost" onclick="showBookDetail(${b.book_id})">Info</button>
+          <button class="btn btn-sm ${b.available_copies>0?'btn-red':'btn-green'}"
+            onclick="toggleAvail(${b.book_id},${b.available_copies<=0},'${escHtml(b.title)}')">
+            ${b.available_copies>0?'Mark Unavail.':'Restore'}
+          </button>
+        </td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = emptyRow(8,e.message); }
+}
+
+async function toggleAvail(id, makeAvail, title) {
+  try {
+    const data = await api('PATCH', `/books/${id}/availability`, { available: makeAvail });
+    toast(data.message,'success'); loadLCatalog();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════════════════
+//  LIBRARIAN: Reservations
+// ══════════════════════════════════════════════════
+async function loadLRes(status, el) {
+  currentResStatus = status;
+  if (el) { document.querySelectorAll('#page-l-reserves .tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); }
+  const tbody = document.getElementById('tb-lreserves');
+  tbody.innerHTML = loadingRow(6);
+  try {
+    const qs = status ? `?status=${status}` : '';
+    const list = await api('GET', `/reservations${qs}`);
+    if (!list.length) { tbody.innerHTML = emptyRow(6,`No ${status||''} reservations.`); return; }
+    tbody.innerHTML = list.map(r => `
+      <tr>
+        <td>#${r.reservation_id}</td>
+        <td class="td-name">${r.student_name||'—'}</td>
+        <td>${r.book_title||'—'}</td>
+        <td class="td-muted">${r.reservation_date}</td>
+        <td>${badge(r.status)}</td>
+        <td style="display:flex;gap:4px">${r.status==='pending'?`
+          <button class="btn btn-sm btn-green" onclick="approveRes(${r.reservation_id})">✓ Approve</button>
+          <button class="btn btn-sm btn-red"   onclick="rejectRes(${r.reservation_id})">✗ Reject</button>`:'—'}
+        </td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = emptyRow(6,e.message); }
+}
+
+async function approveRes(id) {
+  try { const d=await api('PATCH',`/reservations/${id}/approve`); toast(d.message,'success'); loadLRes(currentResStatus); } catch(e){toast(e.message,'error');}
+}
+async function rejectRes(id) {
+  try { const d=await api('PATCH',`/reservations/${id}/reject`); toast(d.message,'success'); loadLRes(currentResStatus); } catch(e){toast(e.message,'error');}
+}
+
+// ══════════════════════════════════════════════════
+//  LIBRARIAN: Issue & Return
+// ══════════════════════════════════════════════════
+async function loadLIssues() {
+  // Populate selects
+  try {
+    const [students, books] = await Promise.all([
+      api('GET', '/users?role=student'),
+      api('GET', '/books?available=true'),
+    ]);
+    const ss = document.getElementById('sel-stu');
+    ss.innerHTML = students.length
+      ? students.map(u=>`<option value="${u.user_id}">${u.name} (#${u.user_id})</option>`).join('')
+      : '<option value="">No students</option>';
+    const bs = document.getElementById('sel-book');
+    bs.innerHTML = books.length
+      ? books.map(b=>`<option value="${b.book_id}">${b.title} (${b.available_copies} left)</option>`).join('')
+      : '<option value="">No books available</option>';
+  } catch(e) {}
+
+  const tbody = document.getElementById('tb-lissues');
+  tbody.innerHTML = loadingRow(8);
+  try {
+    const list = await api('GET', '/issues');
+    if (!list.length) { tbody.innerHTML = emptyRow(8,'No active issues.'); return; }
+    tbody.innerHTML = list.map(i => `
+      <tr>
+        <td>#${i.issue_id}</td>
+        <td class="td-name">${i.student_name||'—'}</td>
+        <td>${i.book_title||'—'}</td>
+        <td class="td-muted">${i.issue_date}</td>
+        <td>${i.is_overdue?`<span style="color:var(--red);font-weight:600">${i.due_date} ⚠️</span>`:i.due_date}</td>
+        <td>${money(i.fine_amount)}</td>
+        <td>${i.is_overdue?`<span class="badge b-red">Overdue</span>`:`<span class="badge b-indigo">Active</span>`}</td>
+        <td><button class="btn btn-sm btn-green" onclick="processReturn(${i.issue_id})">Process Return</button></td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = emptyRow(8,e.message); }
+}
+
+async function libIssueBook() {
+  const sid  = document.getElementById('sel-stu').value;
+  const bid  = document.getElementById('sel-book').value;
+  const days = document.getElementById('inp-days').value;
+  if (!sid||!bid) { toast('Select a student and a book.','error'); return; }
+  try {
+    const data = await api('POST', '/issues', { student_id:+sid, book_id:+bid, days:+days });
+    toast(data.message,'success'); loadLIssues();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function processReturn(issue_id) {
+  openModal('Process Return', `Confirm return for Issue #${issue_id}`, '',
+    [{label:'Cancel',cls:'btn-ghost',fn:'hideModal()'},{label:'Confirm Return',cls:'btn-green',fn:`doReturn(${issue_id})`}]);
+}
+async function doReturn(issue_id) {
+  hideModal();
+  try {
+    const data = await api('POST', `/issues/${issue_id}/return`);
+    toast(data.message, data.fine_charged>0?'error':'success');
+    loadLIssues();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════════════════
+//  LIBRARIAN: Extensions
+// ══════════════════════════════════════════════════
+async function loadLExt() {
+  const tbody = document.getElementById('tb-lext');
+  tbody.innerHTML = loadingRow(8);
+  try {
+    const list = await api('GET', '/extensions');
+    if (!list.length) { tbody.innerHTML = emptyRow(8,'No extension requests.'); return; }
+    tbody.innerHTML = list.map(e => `
+      <tr>
+        <td>#${e.extension_id}</td>
+        <td>#${e.issue_id}</td>
+        <td class="td-name">${e.student_name||'—'}</td>
+        <td>${e.book_title||'—'}</td>
+        <td>+${e.moew_days} days</td>
+        <td class="td-muted">${e.reason||'—'}</td>
+        <td>${badge(e.status)}</td>
+        <td style="display:flex;gap:4px">${e.status==='pending'?`
+          <button class="btn btn-sm btn-green" onclick="approveExt(${e.extension_id})">✓ Approve</button>
+          <button class="btn btn-sm btn-red"   onclick="rejectExt(${e.extension_id})">✗ Reject</button>`:'—'}
+        </td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = emptyRow(8,e.message); }
+}
+
+async function approveExt(id) {
+  try { const d=await api('PATCH',`/extensions/${id}/approve`); toast(d.message,'success'); loadLExt(); } catch(e){toast(e.message,'error');}
+}
+async function rejectExt(id) {
+  try { const d=await api('PATCH',`/extensions/${id}/reject`); toast(d.message,'success'); loadLExt(); } catch(e){toast(e.message,'error');}
+}
+
+// ══════════════════════════════════════════════════
+//  OVERDUE
+// ══════════════════════════════════════════════════
+async function loadOverdue(page) {
+  const tbodyId = page === 'a-overdue' ? 'tb-aoverdue' : 'tb-loverdue';
+  const tbody = document.getElementById(tbodyId);
+  tbody.innerHTML = loadingRow(7);
+  try {
+    const list = await api('GET', '/reports/overdue');
+    if (!list.length) { tbody.innerHTML = emptyRow(7,'No overdue books! 🎉'); return; }
+    tbody.innerHTML = list.map(i => `
+      <tr>
+        <td>#${i.issue_id}</td>
+        <td class="td-name">${i.student_name||'—'}</td>
+        <td class="td-muted">${i.student_email||'—'}</td>
+        <td>${i.book_title||'—'}</td>
+        <td style="color:var(--red)">${i.due_date}</td>
+        <td><span class="badge b-red">${i.days_overdue} days</span></td>
+        <td><span style="color:var(--red);font-weight:700">₹${i.fine_amount.toFixed(2)}</span></td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = emptyRow(7,e.message); }
+}
+
+// ══════════════════════════════════════════════════
+//  ADMIN: Dashboard
+// ══════════════════════════════════════════════════
+async function loadADash() {
+  try {
+    const r = await api('GET', '/reports/summary');
+    const grid = document.getElementById('admin-stats');
+    const cards=[
+      {l:'Total Books',     v:r.total_books,          c:'var(--indigob)', i:'📚'},
+      {l:'Available Copies',v:r.available_copies,     c:'var(--green)',   i:'✅'},
+      {l:'Active Issues',   v:r.active_issues,        c:'var(--purple)',  i:'📤'},
+      {l:'Overdue',         v:r.overdue_issues,        c:'var(--red)',     i:'⚠️'},
+      {l:'Pending Reserv.', v:r.pending_reservations,  c:'var(--amber)',   i:'🗓️'},
+      {l:'Pending Ext.',    v:r.pending_extensions,    c:'var(--amber)',   i:'⏱️'},
+      {l:'Total Users',     v:r.total_users,           c:'var(--indigob)', i:'👥'},
+      {l:'Transactions',    v:r.total_transactions,    c:'var(--green)',   i:'🔄'},
+      {l:'Fines Collected', v:`₹${r.fines_collected}`,c:'var(--green)',   i:'💰'},
+      {l:'Pending Fines',   v:`₹${r.pending_fines}`,  c:'var(--red)',     i:'💸'},
+    ];
+    grid.innerHTML = cards.map(c=>`
+      <div class="stat">
+        <div style="font-size:20px;margin-bottom:5px">${c.i}</div>
+        <div class="stat-val" style="color:${c.c}">${c.v}</div>
+        <div class="stat-lbl">${c.l}</div>
+      </div>`).join('');
+
+    // Populate perm user select
+    const users = await api('GET', '/users');
+    const sel = document.getElementById('perm-user');
+    sel.innerHTML = users.map(u=>`<option value="${u.user_id}">${u.name} (${u.role})</option>`).join('');
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function grantPerm() {
+  const uid  = +document.getElementById('perm-user').value;
+  const perm = document.getElementById('perm-type').value;
+  try { const d=await api('POST',`/users/${uid}/permission`,{permission:perm}); toast(d.message,'success'); } catch(e){toast(e.message,'error');}
+}
+
+async function checkTx() {
+  const id = document.getElementById('check-tx-id').value;
+  if (!id) { toast('Enter an Issue ID.','error'); return; }
+  try {
+    const t = await api('GET', `/transactions/${id}`);
+    openModal(`Transaction #${t.issue_id}`, `Issued on ${t.issue_date}`, `
+      <div class="book-detail-grid">
+        <div class="detail-row"><div class="detail-label">Book</div><div class="detail-val">${t.book_title||'—'}</div></div>
+        <div class="detail-row"><div class="detail-label">Student</div><div class="detail-val">${t.student_name||'—'}</div></div>
+        <div class="detail-row"><div class="detail-label">Issue Date</div><div class="detail-val">${t.issue_date}</div></div>
+        <div class="detail-row"><div class="detail-label">Due Date</div><div class="detail-val">${t.due_date}</div></div>
+        <div class="detail-row"><div class="detail-label">Return Date</div><div class="detail-val">${t.return_date||'Not yet returned'}</div></div>
+        <div class="detail-row"><div class="detail-label">Fine</div><div class="detail-val">${t.fine_amount>0?`₹${t.fine_amount.toFixed(2)}`:'None'}</div></div>
+        <div class="detail-row"><div class="detail-label">Status</div><div class="detail-val">${badge(t.status)}</div></div>
+        <div class="detail-row"><div class="detail-label">Overdue</div><div class="detail-val">${t.is_overdue?'<span style="color:var(--red)">Yes ⚠️</span>':'No'}</div></div>
+      </div>`, [{label:'Close',cls:'btn-ghost',fn:'hideModal()'}]);
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════════════════
+//  ADMIN: Manage Books
+// ══════════════════════════════════════════════════
+async function loadAdminBooks() {
+  const tbody = document.getElementById('tb-abooks');
+  tbody.innerHTML = loadingRow(8);
+  try {
+    const books = await api('GET', '/books');
+    if (!books.length) { tbody.innerHTML = emptyRow(8,'No books in catalog.'); return; }
+    tbody.innerHTML = books.map(b => `
+      <tr>
+        <td>#${b.book_id}</td>
+        <td><div class="td-name">${b.title}</div><div class="td-muted" style="font-size:10px">${b.isbn}</div></td>
+        <td class="td-muted">${b.author}</td>
+        <td><span class="badge b-indigo">${b.category}</span></td>
+        <td>${b.copies}</td>
+        <td>${b.available_copies>0?`<span class="badge b-green">${b.available_copies}</span>`:`<span class="badge b-red">0</span>`}</td>
+        <td class="td-muted">${b.location}</td>
+        <td style="display:flex;gap:4px">
+          <button class="btn btn-sm btn-ghost" onclick="editBookModal(${b.book_id})">Edit</button>
+          <button class="btn btn-sm btn-red" onclick="deleteBook(${b.book_id},'${escHtml(b.title)}')">Remove</button>
+        </td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = emptyRow(8,e.message); }
+}
+
+async function addBook() {
+  const title  = document.getElementById('bk-title').value.trim();
+  const author = document.getElementById('bk-author').value.trim();
+  const copies = +document.getElementById('bk-copies').value;
+  if (!title||!author||!copies) { toast('Title, author and copies are required.','error'); return; }
+  try {
+    const data = await api('POST', '/books', {
+      title, author, copies,
+      isbn:      document.getElementById('bk-isbn').value.trim() || 'N/A',
+      publisher: document.getElementById('bk-pub').value.trim(),
+      category:  document.getElementById('bk-cat').value.trim() || 'General',
+      year:      +document.getElementById('bk-year').value || new Date().getFullYear(),
+      edition:   document.getElementById('bk-ed').value.trim() || '1st',
+      location:  document.getElementById('bk-loc').value.trim() || 'TBD',
+      description: document.getElementById('bk-desc').value.trim(),
+    });
+    toast(data.message,'success');
+    ['bk-title','bk-author','bk-isbn','bk-pub','bk-cat','bk-year','bk-ed','bk-loc','bk-desc'].forEach(id=>{document.getElementById(id).value='';});
+    document.getElementById('bk-copies').value='1';
+    loadAdminBooks();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function editBookModal(id) {
+  const b = await api('GET', `/books/${id}`);
+  openModal('Edit Book', b.title, `
+    <label>Title</label><input id="e-title" value="${escHtml(b.title)}">
+    <label>Author</label><input id="e-author" value="${escHtml(b.author)}">
+    <label>Category</label><input id="e-cat" value="${escHtml(b.category)}">
+    <div class="form-row">
+      <div><label>Copies</label><input type="number" id="e-copies" value="${b.copies}"></div>
+      <div><label>Location</label><input id="e-loc" value="${escHtml(b.location)}"></div>
+    </div>
+    <label>Description</label><textarea id="e-desc">${escHtml(b.description||'')}</textarea>`,
+    [{label:'Cancel',cls:'btn-ghost',fn:'hideModal()'},{label:'Save',cls:'btn-indigo',fn:`saveBook(${id})`}]);
+}
+
+async function saveBook(id) {
+  try {
+    const data = await api('PUT', `/books/${id}`, {
+      title:       document.getElementById('e-title').value,
+      author:      document.getElementById('e-author').value,
+      category:    document.getElementById('e-cat').value,
+      copies:      +document.getElementById('e-copies').value,
+      location:    document.getElementById('e-loc').value,
+      description: document.getElementById('e-desc').value,
+    });
+    toast(data.message,'success'); hideModal(); loadAdminBooks();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function deleteBook(id, title) {
+  openModal('Remove Book', `Remove "${title}" from catalog?`, '',
+    [{label:'Cancel',cls:'btn-ghost',fn:'hideModal()'},{label:'Remove',cls:'btn-red',fn:`doDeleteBook(${id})`}]);
+}
+async function doDeleteBook(id) {
+  hideModal();
+  try { const d=await api('DELETE',`/books/${id}`); toast(d.message,'success'); loadAdminBooks(); } catch(e){toast(e.message,'error');}
+}
+
+// ══════════════════════════════════════════════════
+//  ADMIN: Users
+// ══════════════════════════════════════════════════
+async function loadUsers(role, el) {
+  currentUserRole = role;
+  if (el) { document.querySelectorAll('#page-a-users .tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); }
+  const tbody = document.getElementById('tb-ausers');
+  tbody.innerHTML = loadingRow(8);
+  try {
+    const list = await api('GET', `/users${role?'?role='+role:''}`);
+    if (!list.length) { tbody.innerHTML = emptyRow(8,'No users found.'); return; }
+    tbody.innerHTML = list.map(u => `
+      <tr>
+        <td>#${u.user_id}</td>
+        <td class="td-name">${u.name}</td>
+        <td class="td-muted">${u.email}</td>
+        <td><span class="badge ${u.role==='admin'?'b-red':u.role==='librarian'?'b-purple':'b-indigo'}">${u.role}</span></td>
+        <td class="td-muted">${u.department||u.librarian_id||u.admin_id||'—'}</td>
+        <td>${badge(u.status||'active')}</td>
+        <td class="td-muted">${u.joined||'—'}</td>
+        <td><button class="btn btn-sm btn-ghost" onclick="editUserModal(${u.user_id})">Edit</button></td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = emptyRow(8,e.message); }
+}
+
+async function editUserModal(id) {
+  const u = await api('GET',`/users/${id}`);
+  openModal('Edit User', u.email, `
+    <label>Name</label><input id="eu-name" value="${escHtml(u.name)}">
+    ${u.role==='student'?`<label>Department</label><input id="eu-dept" value="${escHtml(u.department||'')}">`:'' }
+    <label>Status</label>
+    <select id="eu-status">
+      <option value="active"    ${u.status==='active'?'selected':''}>Active</option>
+      <option value="suspended" ${u.status==='suspended'?'selected':''}>Suspended</option>
+    </select>`,
+    [{label:'Cancel',cls:'btn-ghost',fn:'hideModal()'},{label:'Update',cls:'btn-indigo',fn:`saveUser(${id})`}]);
+}
+
+async function saveUser(id) {
+  const dept = document.getElementById('eu-dept');
+  const payload = { name:document.getElementById('eu-name').value, status:document.getElementById('eu-status').value };
+  if (dept) payload.department = dept.value;
+  try {
+    const data = await api('PUT',`/users/${id}`, payload);
+    toast(data.message,'success'); hideModal(); loadUsers(currentUserRole);
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════════════════
+//  ADMIN: Transactions
+// ══════════════════════════════════════════════════
+async function loadATx(status, el) {
+  currentTxStatus = status;
+  if (el) { document.querySelectorAll('#page-a-tx .tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); }
+  const tbody = document.getElementById('tb-atx');
+  tbody.innerHTML = loadingRow(8);
+  try {
+    const qs = status ? `?status=${status}` : '';
+    const list = await api('GET',`/transactions${qs}`);
+    if (!list.length) { tbody.innerHTML = emptyRow(8,'No transactions.'); return; }
+    tbody.innerHTML = list.map(t=>`
+      <tr>
+        <td>#${t.issue_id}</td>
+        <td class="td-name">${t.student_name||'—'}</td>
+        <td>${t.book_title||'—'}</td>
+        <td class="td-muted">${t.issue_date}</td>
+        <td>${t.is_overdue?`<span style="color:var(--red)">${t.due_date} ⚠️</span>`:t.due_date}</td>
+        <td class="td-muted">${t.return_date||'—'}</td>
+        <td>${money(t.fine_amount)}</td>
+        <td>${badge(t.status||'active')}</td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = emptyRow(8,e.message); }
+}
+
+// ══════════════════════════════════════════════════
+//  ADMIN: Popular Books
+// ══════════════════════════════════════════════════
+async function loadPopular() {
+  const tbody = document.getElementById('tb-popular');
+  tbody.innerHTML = loadingRow(6);
+  try {
+    const list = await api('GET','/reports/popular');
+    if (!list.length) { tbody.innerHTML = emptyRow(6,'No borrow data yet.'); return; }
+    tbody.innerHTML = list.map((b,i)=>`
+      <tr>
+        <td><strong style="color:var(--amber)">#${i+1}</strong></td>
+        <td class="td-name">${b.title||'—'}</td>
+        <td class="td-muted">${b.author||'—'}</td>
+        <td><span class="badge b-indigo">${b.category||'—'}</span></td>
+        <td><strong style="color:var(--green)">${b.borrow_count}</strong></td>
+        <td>${b.available_copies>0?`<span class="badge b-green">${b.available_copies}</span>`:`<span class="badge b-red">0</span>`}</td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = emptyRow(6,e.message); }
+}
+
+// ══════════════════════════════════════════════════
+//  ADMIN: Settings
+// ══════════════════════════════════════════════════
+async function loadSettings() {
+  try {
+    const s = await api('GET','/settings');
+    document.getElementById('fine-rate').value = s.fine_per_day;
+  } catch(e) {}
+}
+async function saveSettings() {
+  const rate = +document.getElementById('fine-rate').value;
+  try { const d=await api('PUT','/settings',{fine_per_day:rate}); toast(d.message,'success'); } catch(e){toast(e.message,'error');}
+}
+
+// ══════════════════════════════════════════════════
+//  UI HELPERS
+// ══════════════════════════════════════════════════
+function toast(msg, type='info') {
+  const el = document.createElement('div');
+  el.className = `toast t-${type}`;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>el.remove(), 3800);
+}
+
+function openModal(title, sub, bodyHtml, btns) {
+  document.getElementById('m-title').textContent = title;
+  document.getElementById('m-sub').textContent   = sub;
+  document.getElementById('m-body').innerHTML    = bodyHtml;
+  document.getElementById('m-actions').innerHTML = btns.map(b=>`<button class="btn ${b.cls}" onclick="${b.fn}">${b.label}</button>`).join('');
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+function hideModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+function ovClick(e) { if(e.target===document.getElementById('modal-overlay')) hideModal(); }
+
+function escHtml(s) { return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
+</body>
+</html>
