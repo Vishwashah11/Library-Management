@@ -1,3 +1,0 @@
-# Libraries required for running this project
-# No external libraries are currently imported for this demo.
-# Future additions might include FastAPI, uvicorn, SQLAlchemy, etc.

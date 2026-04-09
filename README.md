@@ -1,46 +1,45 @@
-# Library Management System
+# Library Management System (C++)
 
-A Python-based framework for a Library Management System (LMS) designed using the class diagram provided. This project includes classes and methods for users (Student, Librarian, Administrator), books, transactions, and requests.
+A lightweight, robust C++ simulation for a Library Management System (LMS). This project manages users (Student, Librarian, Administrator), books, live transactions, and inventory requests through a seamless Object-Oriented design.
 
 ## Project Structure
 
 ```text
 library-management/
-├── app/
-│   ├── models/             # Core class models
-│   │   ├── __init__.py     # Export models
-│   │   ├── user.py         # Base class
-│   │   ├── student.py      # Student specifics
-│   │   ├── librarian.py    # Librarian specifics
-│   │   ├── administrator.py # Admin specifics
-│   │   ├── book.py         # Book specifics
-│   │   ├── issue_transaction.py # Transactions
-│   │   ├── reservation.py  # Reservations
-│   │   └── extension_request.py # Extension logic
-│   └── __init__.py         # Package mark
-├── main.py                 # Demo script
+├── library_management.cpp  # Core application with all class models and logic
+├── library_management.exe  # Compiled executable for the demo runtime
 └── README.md               # Documentation
 ```
 
 ## Features
 
-- **Inheritance-based User Management**: `Student`, `Librarian`, and `Administrator` all inherit from a common `User` base class.
-- **Transaction History**: Track `IssueTransaction` with fine calculations.
-- **Request Workflows**: Manage `Reservation` and `ExtensionRequest` with approvals.
+- **Inheritance-Based User Roles**: `Student`, `Librarian`, and `Administrator` all inherit from a common `User` base class.
+- **In-Memory Global Database**: Uses vectors to cleanly store `Book`, `Reservation`, `IssueTransaction`, and `ExtensionRequest` lists.
 - **Role-based Actions**: 
     - **Students** can search books, request extensions, and make reservations.
     - **Librarians** approve reservations/extensions, process issues/returns, and manage availability.
-    - **Administrators** can manage users, generate reports, and monitor transactions.
+    - **Administrators** can manage users, generate system reports, and monitor transactions.
+- **Transaction History**: Tracks issues automatically including due dates.
 
-## How to Run
+## How to Compile & Run
 
-1. Clone or download the repository.
-2. Ensure you have Python 3.7+ installed.
-3. Run the demonstration script:
+You need a C++ compiler (like `g++`) installed on your system. 
+
+1. **Open your terminal or command prompt** inside the project folder.
+2. **Compile the program:**
    ```bash
-   python main.py
+   g++ -o library_management.exe library_management.cpp
+   ```
+3. **Execute the compiled program:**
+
+   On Windows:
+   ```bash
+   .\library_management.exe
    ```
 
-## Design Correction Applied
+   On Linux/macOS:
+   ```bash
+   ./library_management.exe
+   ```
 
-The project implements the requested design correction where the relation between **Librarian** and **Reservation** is maintained for approvals, ensuring a smooth workflow between students making reservations and librarians processing them.
+The script will automatically execute a demonstration workflow displaying student queries, reservation approvals, transactions, returns, and inventory stat reporting!
